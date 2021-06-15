@@ -64,6 +64,17 @@ const RGBf0 = RGB{Float32}
 const NativeFont = FreeTypeAbstraction.FTFont
 
 
+
+
+
+
+
+include("documentation/docstringextension.jl")
+
+include("utilities/quaternions.jl")
+include("interaction/PriorityObservable.jl")
+
+
 """
     GlyphLayout5
 
@@ -86,12 +97,6 @@ struct GlyphLayout5
 end
 
 
-
-
-include("documentation/docstringextension.jl")
-
-include("utilities/quaternions.jl")
-include("interaction/PriorityObservable.jl")
 include("types.jl")
 include("utilities/utilities.jl")
 include("utilities/texture_atlas.jl")
@@ -103,6 +108,8 @@ include("patterns.jl")
 
 # Basic scene/plot/recipe interfaces + types
 include("scenes.jl")
+
+
 
 struct Figure
     scene::Scene
