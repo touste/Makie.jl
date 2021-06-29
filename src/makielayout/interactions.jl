@@ -87,7 +87,7 @@ end
 
 function process_interaction(@nospecialize args...)
     # do nothing in the default case
-    return false
+    return Consume(false)
 end
 
 # a generic fallback for functions to have one really simple path to getting interactivity
@@ -96,15 +96,9 @@ function process_interaction(f::Function, event, parent)
     # in case f is only defined for a specific type of event
     if applicable(f, event, parent)
         # TODO this is deprecation code, make this just `return f(event, parent)` eventually
-        x = f(event, parent)
-        if x isa Bool
-            return x
-        else
-            @warn "Interactions should return true if the consume the given event or false if they don't! ($f)" maxlog = 1
-            return false
-        end
+        return f(event, parent)
     end
-    return false
+    return Consume(false)
 end
 
 
@@ -155,6 +149,12 @@ function process_interaction(r::RectangleZoom, event::MouseEvent, ax::Axis)
     transf = Makie.transform_func(ax)
     inv_transf = Makie.inverse_transform(transf)
 
+    if isnothing(inv_transf)
+        @warn "Can't rectangle zoom without inverse transform"
+        # TODO, what can we do without inverse?
+        return Consume(false)
+    end
+
     if event.type === MouseEventTypes.leftdragstart
         data = Makie.apply_transform(inv_transf, event.data)
         prev_data = Makie.apply_transform(inv_transf, event.prev_data)
@@ -177,7 +177,8 @@ function process_interaction(r::RectangleZoom, event::MouseEvent, ax::Axis)
         # append!(r.plots, [mesh, wf])
         append!(r.plots, [mesh])
         r.active = true
-        return true
+        return Consume(true)
+
     elseif event.type === MouseEventTypes.leftdrag
         # clamp mouse data to shown limits
         rect = Makie.apply_transform(transf, ax.finallimits[])
@@ -185,7 +186,8 @@ function process_interaction(r::RectangleZoom, event::MouseEvent, ax::Axis)
 
         r.to = data
         r.rectnode[] = _chosen_limits(r, ax)
-        return true
+        return Consume(true)
+
     elseif event.type === MouseEventTypes.leftdragstop
         newlims = r.rectnode[]
         if !(0 in widths(newlims))
@@ -199,10 +201,10 @@ function process_interaction(r::RectangleZoom, event::MouseEvent, ax::Axis)
         # remove any possible links in plotting functions
         empty!(r.rectnode.listeners)
         r.active = false
-        return true
+        return Consume(true)
     end
 
-    return false
+    return Consume(false)
 end
 
 function rectclamp(p::Point, r::Rect)
@@ -214,10 +216,10 @@ end
 function process_interaction(r::RectangleZoom, event::KeysEvent, ax::Axis)
     r.restrict_y = Keyboard.x in event.keys
     r.restrict_x = Keyboard.y in event.keys
-    r.active || return false
+    r.active || return Consume(false)
 
     r.rectnode[] = _chosen_limits(r, ax)
-    return true
+    return Consume(true)
 end
 
 
@@ -238,13 +240,12 @@ function process_interaction(l::LimitReset, event::MouseEvent, ax::Axis)
             else
                 reset_limits!(ax)
             end
-            return true
+            return Consume(true)
         end
     end
 
-    return false
+    return Consume(false)
 end
-
 
 function process_interaction(s::ScrollZoom, event::ScrollEvent, ax::Axis)
     # use vertical zoom
@@ -307,13 +308,13 @@ function process_interaction(s::ScrollZoom, event::ScrollEvent, ax::Axis)
     end
 
     # NOTE this might be problematic if if we add scrolling to something like Menu
-    return true
+    return Consume(true)
 end
 
 function process_interaction(dp::DragPan, event::MouseEvent, ax)
 
     if event.type !== MouseEventTypes.rightdrag
-        return false
+        return Consume(false)
     end
 
     tlimits = ax.targetlimits
@@ -369,13 +370,13 @@ function process_interaction(dp::DragPan, event::MouseEvent, ax)
     newrect_trans = FRect(Vec2f0(xori, yori), widths(tlimits_trans))
     tlimits[] = Makie.apply_transform(inv_transf, newrect_trans)
 
-    return true
+    return Consume(true)
 end
 
 
 function process_interaction(dr::DragRotate, event::MouseEvent, ax3d)
     if event.type !== MouseEventTypes.leftdrag
-        return false
+        return Consume(false)
     end
 
     dpx = event.px - event.prev_px
@@ -383,5 +384,5 @@ function process_interaction(dr::DragRotate, event::MouseEvent, ax3d)
     ax3d.azimuth[] += -dpx[1] * 0.01
     ax3d.elevation[] = clamp(ax3d.elevation[] - dpx[2] * 0.01, -pi/2 + 0.001, pi/2 - 0.001)
 
-    return true
+    return Consume(true)
 end

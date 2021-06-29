@@ -170,7 +170,6 @@ function glyph_collection(str::AbstractString, font_per_char, fontscale_px, hali
     else
         error("Invalid halign $halign. Valid values are <:Number, :left, :center and :right.")
     end
-
     xs_aligned = [xsgroup .- halign * maxwidth for xsgroup in xs_justified]
 
     # for y alignment, we need the largest ascender of the first line

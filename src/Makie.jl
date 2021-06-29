@@ -10,6 +10,7 @@ const Contours = ContoursHygiene.Contour
 using LaTeXStrings
 export @L_str
 using MathTeXEngine
+using Base64
 using Artifacts
 using Random
 using FFMPEG # get FFMPEG on any system!
@@ -19,7 +20,7 @@ using FixedPointNumbers, Packing, SignedDistanceFields
 using Markdown, DocStringExtensions # documentation
 using Serialization # serialize events
 using StructArrays
-using GeometryBasics: widths, positive_widths, VecTypes, AbstractPolygon
+using GeometryBasics: widths, positive_widths, VecTypes, AbstractPolygon, value
 using StaticArrays
 import StatsBase, Distributions, KernelDensity
 using Distributions: Distribution, VariateForm, Discrete, QQPair, pdf, quantile, qqbuild
@@ -171,6 +172,7 @@ include("camera/projection_math.jl")
 include("camera/camera.jl")
 include("camera/camera2d.jl")
 include("camera/camera3d.jl")
+include("camera/old_camera3d.jl")
 
 # basic recipes
 include("basic_recipes/convenience_functions.jl")
@@ -265,7 +267,8 @@ export SceneSpace, PixelSpace, Pixel
 
 # camera related
 export AbstractCamera, EmptyCamera, Camera, Camera2D, Camera3D, cam2d!, cam2d
-export campixel!, campixel, cam3d!, cam3d_cad!, update_cam!, rotate_cam!, translate_cam!, zoom!
+export campixel!, campixel, cam3d!, cam3d_cad!, old_cam3d!, old_cam3d_cad!
+export update_cam!, rotate_cam!, translate_cam!, zoom!
 export pixelarea, plots, cameracontrols, cameracontrols!, camera, events
 export to_world
 
@@ -284,6 +287,7 @@ export hasfocus
 export entered_window
 export disconnect!, must_update, force_update!, update!, update_limits!
 export DataInspector
+export Consume
 
 # Raymarching algorithms
 export RaymarchAlgorithm, IsoValue, Absorption, MaximumIntensityProjection, AbsorptionRGBA, IndexedAbsorptionRGBA
@@ -404,7 +408,7 @@ function plot!(plot::Text{<:Tuple{<:Union{LaTeXString, AbstractVector{<:LaTeXStr
     scene = Makie.parent_scene(plot)
 
     onany(lineels_glyphlayout_offset, scene.camera.projectionview) do (allels, gls, offs), projview
-        
+
         inv_projview = inv(projview)
         pos = plot.position[]
         ts = plot.textsize[]
