@@ -1,8 +1,6 @@
 using CairoMakie
 # using CairoMakie
 using GLMakie
-using MathTeXEngine
-using LaTeXStrings
 
 CairoMakie.activate!(type = "svg")
 
@@ -29,20 +27,21 @@ with_theme() do
     )
     text!(L"\int_{0}^{2π} \sin(x) dx", position = (500, 0))
 
-    Legend(f[1, 2], [l, l, l], [L"\sum{xy}", L"a\int_0^5x^2+2ab", "hello you!"])
-    f
+    Legend(f[1, 2], [l, l, l], [L"\sum{xy}", L"a\int_0^5x^2+2ab", L"||x-y||^2"])
+    display(f)
 end
 # save("test.pdf", f)
 ##
-s = Scene(camera = campixel!)
-t = text!(s,
-    L"\sqrt{2}",
-    position = (50, 50),
-    rotation = pi/2,
-    show_axis = false,
-    space = :data)
-s
-
+begin
+    s = Scene(camera = campixel!)
+    t = text!(s,
+        L"\sqrt{2}",
+        position = (50, 50),
+        rotation = pi/2,
+        show_axis = false,
+        space = :data)
+    display(s)
+end
 ##
 data = randn(100, 2)
 f, ax, _ = scatter(data)
