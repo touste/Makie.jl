@@ -136,12 +136,16 @@ current_figure()
 
 ## dynamic ticks with MathTeXEngine
 
-lines(0..25, x -> 4 * sin(x) / (cos(3x) + 4), figure = (fontsize = 25, font = "Times"),
+lines(0..25, x -> 4 * sin(x) / (cos(3x) + 4), figure = (fontsize = 16, font = "Times"),
     axis = (
-        xtickformat = (xs -> [L"\sqrt{%$x}+\sum" for x in xs]),
+        xtickformat = (xs -> [L"e^{\sqrt{%$x}}+\sum" for x in xs]),
     )
 )
 
 ## empty ticks
 
 lines(randn(100), axis = (xticks = [-1000],))
+
+## 3d axis
+
+lines(randn(100, 3))
